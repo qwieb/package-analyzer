@@ -1,0 +1,20 @@
+# Виртуальное окружение Python
+venv/
+.venv/
+env/
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Настройки редактора VS Code
+.vscode/
+
+# Системный мусор
+.DS_Store
+Thumbs.db
+
+# Наши сгенерированные файлы (потом добавим картинки)
+*.svg
+*.png
