@@ -17,16 +17,12 @@ def load_config(config_path: str) -> dict:
 
     package_name = settings.get('package_name')
     if not package_name:
-        raise ValueError(
-            "Параметр 'package_name' не задан или пуст."
-        )
+        raise ValueError("Параметр 'package_name' не задан или пуст.")
     parsed_config['package_name'] = package_name
 
     repo_url = settings.get('repo_url')
     if not repo_url:
-        raise ValueError(
-            "Параметр 'repo_url' не задан или пуст."
-        )
+        raise ValueError("Параметр 'repo_url' не задан или пуст.")
     parsed_config['repo_url'] = repo_url
 
     test_mode_str = settings.get('test_mode', 'False').lower()
@@ -38,9 +34,7 @@ def load_config(config_path: str) -> dict:
 
     output_image = settings.get('output_image')
     if not output_image:
-        raise ValueError(
-            "Параметр 'output_image' не задан или пуст."
-        )
+        raise ValueError("Параметр 'output_image' не задан или пуст.")
     parsed_config['output_image'] = output_image
 
     ascii_tree_str = settings.get('ascii_tree', 'False').lower()
@@ -63,7 +57,7 @@ def main():
             print(f"{key}: {value}")
         print("============================")
         
-        print("\n[Успех] Конфигурация загружена без ошибок. Готов к работе.")
+        print("\n[Успех] Конфигурация загружена без ошибок.")
 
     except Exception as e:
         print(f"[Ошибка] {e}", file=sys.stderr)
