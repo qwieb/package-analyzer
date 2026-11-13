@@ -4,22 +4,16 @@ import os
 
 def load_config(config_path: str) -> dict:
     if not os.path.exists(config_path):
-        raise FileNotFoundError(
-            f"Файл конфигурации не найден: {config_path}"
-        )
+        raise FileNotFoundError(f"Файл конфигурации не найден: {config_path}")
     config = configparser.ConfigParser()
     config.read(config_path)
     if 'Settings' not in config:
-        raise ValueError(
-            "В файле конфигурации нет секции [Settings]"
-        )
+        raise ValueError("В файле конфигурации нет секции [Settings]")
     settings = config['Settings']
     parsed_config = {}
     package_name = settings.get('package_name')
     if not package_name:
-        raise ValueError(
-            "Параметр 'package_name' не задан или пуст."
-        )
+        raise ValueError("Параметр 'package_name' не задан или пуст.")
     parsed_config['package_name'] = package_name
     repo_url = settings.get('repo_url')
     if not repo_url:
