@@ -1,6 +1,8 @@
 import configparser
 import sys
 import os
+import json 
+import urllib.request 
 
 def load_config(config_path: str) -> dict:
     if not os.path.exists(config_path):
@@ -41,6 +43,25 @@ def load_config(config_path: str) -> dict:
     parsed_config['ascii_tree'] = (ascii_tree_str == 'true')
     return parsed_config
 
+def fetch_dependencies(config: dict) -> list:
+    if config['test_mode']:
+        print(f"[*] Режим тестирования: читаем {config['repo_url']}")
+        try:
+            with open(config['repo_url'], 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception as e:
+            raise ValueError(f"Ошибка чтения файла: {e}")
+    else:
+        print(f"[*] Загрузка данных из {config['repo_url']}...")
+        try:
+            response = urllib.request.urlopen(config['repo_url'])
+            data = json.loads(response.read().decode('utf-8'))
+        except Exception as e:
+            raise ValueError(f"Ошибка сети: {e}")
+            
+    requires = data.get('info', {}).get('requires_dist', [])
+    return requires if requires else []
+
 def main():
     config_file = 'config.ini'
     try:
@@ -49,7 +70,15 @@ def main():
         for key, value in cfg.items():
             print(f"{key}: {value}")
         print("============================")
-        print("\n[Успех] Конфигурация загружена без ошибок.")
+        print(f"\n[*] Анализ пакета: {cfg['package_name']}")
+        deps = fetch_dependencies(cfg)
+        print("\n=== Прямые зависимости ===")
+        if not deps:
+            print("Зависимостей не найдено.")
+        else:
+            for dep in deps:
+                print(f" - {dep}")
+        print("==========================")
     except Exception as e:
         print(f"[Ошибка] {e}", file=sys.stderr)
         sys.exit(1)

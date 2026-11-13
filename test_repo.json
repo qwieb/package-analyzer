@@ -1,0 +1,11 @@
+{
+  "info": {
+    "name": "test-package",
+    "version": "1.0.0",
+    "requires_dist": [
+      "requests (>=2.0.0)",
+      "urllib3 (<2.0)",
+      "chardet"
+    ]
+  }
+}
