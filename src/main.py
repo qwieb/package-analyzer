@@ -3,6 +3,7 @@ import sys
 import os
 import json 
 import urllib.request 
+from collections import deque
 
 def load_config(config_path: str) -> dict:
     if not os.path.exists(config_path):
@@ -41,6 +42,13 @@ def load_config(config_path: str) -> dict:
             "Параметр 'ascii_tree' должен быть 'True' или 'False'."
         )
     parsed_config['ascii_tree'] = (ascii_tree_str == 'true')
+    max_depth_str = settings.get('max_depth')
+    if not max_depth_str:
+        raise ValueError("Параметр 'max_depth' не задан или пуст.")
+    try:
+        parsed_config['max_depth'] = int(max_depth_str)
+    except ValueError:
+        raise ValueError("Параметр 'max_depth' должен быть числом.")
     return parsed_config
 
 def fetch_dependencies(config: dict) -> list:
@@ -58,9 +66,38 @@ def fetch_dependencies(config: dict) -> list:
             data = json.loads(response.read().decode('utf-8'))
         except Exception as e:
             raise ValueError(f"Ошибка сети: {e}")
-            
-    requires = data.get('info', {}).get('requires_dist', [])
+    if 'info' in data:
+        requires = data.get('info', {}).get('requires_dist', [])
+    else:
+        pkg_name = config['package_name']
+        pkg_data = data.get(pkg_name, {})
+        requires = pkg_data.get('info', {}).get('requires_dist', [])
     return requires if requires else []
+
+def build_graph(config: dict) -> dict:
+    start_pkg = config['package_name']
+    max_depth = config['max_depth']
+    graph = {start_pkg: []}
+    queue = deque([(start_pkg, 0)])
+    visited = {start_pkg}
+    print(f"\n[*] Построение графа (BFS, глубина {max_depth})...")
+    while queue:
+        current_pkg, depth = queue.popleft()
+        if depth >= max_depth:
+            continue
+        print(f"  -> Уровень {depth}: {current_pkg}")
+        config['package_name'] = current_pkg
+        deps = fetch_dependencies(config)
+        config['package_name'] = start_pkg
+        graph[current_pkg] = deps
+        for dep in deps:
+            dep_name = dep.split(' ')[0].strip()
+            if dep_name not in visited:
+                visited.add(dep_name)
+                if dep_name not in graph:
+                    graph[dep_name] = []
+                queue.append((dep_name, depth + 1))
+    return graph
 
 def main():
     config_file = 'config.ini'
@@ -72,6 +109,13 @@ def main():
         print("============================")
         print(f"\n[*] Анализ пакета: {cfg['package_name']}")
         deps = fetch_dependencies(cfg)
+        graph = build_graph(cfg)
+        print("\n=== Граф зависимостей ===")
+        for pkg, pkg_deps in graph.items():
+            if pkg_deps:
+                print(f" {pkg} -> {', '.join(pkg_deps)}")
+            else:
+                print(f" {pkg} -> (нет зависимостей)")
         print("\n=== Прямые зависимости ===")
         if not deps:
             print("Зависимостей не найдено.")
